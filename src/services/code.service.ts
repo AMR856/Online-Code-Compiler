@@ -1,25 +1,64 @@
-import CustomError from "../types/customError";
+import { v4 as uuidv4 } from "uuid";
+import { redisClient } from "../redis/client";
+import { sendToQueue } from "../queue/producer";
 import { ExecuteRequest } from "../types/executeRequest";
+import CustomError from "../types/customError";
 import { HttpStatusText } from "../types/HTTPStatusText";
-import { Languages } from "../types/languages";
-import { runJavaScriptDocker } from "./docker/js.service";
-import { runPythonDocker } from "./docker/py.service";
 
 export class CodeService {
-  static async execute(request: ExecuteRequest) {
-    const { code, input, language } = request;
+  static async createJob(request: ExecuteRequest) {
+    const { code, language, input } = request;
 
-    switch (language.toLowerCase()) {
-      case Languages.PYTHON:
-        return runPythonDocker(code, input);
-      case Languages.JAVASCRIPT:
-        return runJavaScriptDocker(code, input);
-      default:
-        throw new CustomError(
-          `Language ${language} not supported`,
-          400,
-          HttpStatusText.FAIL,
-        );
+    if (!code || !language) {
+      throw new CustomError(
+        "Code and language are required",
+        400,
+        HttpStatusText.FAIL,
+      );
     }
+
+    const jobId = uuidv4();
+
+    await redisClient.hSet(jobId, {
+      status: "queued",
+      stdout: "",
+      stderr: "",
+    });
+
+    await sendToQueue({
+      id: jobId,
+      code,
+      language,
+      input,
+    });
+
+    return { jobId, status: "queued" };
+  }
+
+  static async getJobResult(jobId?: string | string[]) {
+    if (!jobId) {
+      throw new CustomError("Job ID is required", 400, HttpStatusText.FAIL);
+    }
+
+    if (Array.isArray(jobId)) {
+      jobId = jobId[0];
+    }
+
+    if (!jobId || jobId.trim() === "") {
+      throw new CustomError("Invalid Job ID", 400, HttpStatusText.FAIL);
+    }
+
+    const result = await redisClient.hGetAll(jobId);
+
+    if (!result || Object.keys(result).length === 0) {
+      throw new CustomError("Job not found", 404, HttpStatusText.FAIL);
+    }
+
+    return {
+      jobId,
+      status: result.status,
+      stdout: result.stdout || "",
+      stderr: result.stderr || "",
+    };
   }
 }

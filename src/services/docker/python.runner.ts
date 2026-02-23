@@ -1,6 +1,6 @@
-import { runDocker } from "./dockerRunner";
+import { runDocker } from "./docker.runner";
 
-export function runPythonDocker(code: string, input?: string) {
+export function runPython(code: string, input?: string) {
   return runDocker({
     image: "python:3.10",
     fileName: "code.py",

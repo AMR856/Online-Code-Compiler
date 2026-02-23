@@ -1,4 +1,4 @@
-import { runDocker } from "./dockerRunner";
+import { runDocker } from "./docker.runner";
 
 export function runJavaScriptDocker(code: string, input?: string) {
   return runDocker({

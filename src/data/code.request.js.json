@@ -23,5 +23,10 @@
     "language": "javascript",
     "code": "while(true){}",
     "input": ""
-  }
+  },
+  {
+  "language": "javascript",
+  "code": "throw new Error('Test error');",
+  "input": ""
+}
 ]

@@ -1,4 +1,8 @@
+import CustomError from "../types/customError";
 import { ExecuteRequest } from "../types/executeRequest";
+import { HttpStatusText } from "../types/HTTPStatusText";
+import { Languages } from "../types/languages";
+import { runJavaScriptDocker } from "./docker/js.service";
 import { runPythonDocker } from "./docker/py.service";
 
 export class CodeService {
@@ -6,10 +10,16 @@ export class CodeService {
     const { code, input, language } = request;
 
     switch (language.toLowerCase()) {
-      case "python":
+      case Languages.PYTHON:
         return runPythonDocker(code, input);
+      case Languages.JAVASCRIPT:
+        return runJavaScriptDocker(code, input);
       default:
-        throw new Error(`Language ${language} not supported`);
+        throw new CustomError(
+          `Language ${language} not supported`,
+          400,
+          HttpStatusText.FAIL,
+        );
     }
   }
 }

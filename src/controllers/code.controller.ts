@@ -7,7 +7,12 @@ export class CodeController {
   static async execute(req: Request<{}, {}, ExecuteRequest>, res: Response) {
     try {
       const result = await CodeService.execute(req.body);
-      const response: ExecuteResponse = { stdout: result.stdout, stderr: result.stderr };
+      const response: ExecuteResponse = {
+        success: result.success,
+        status: result.status,
+        stdout: result.stdout,
+        stderr: result.stderr,
+      };
       res.json(response);
     } catch (err: any) {
       res.status(400).json({ error: err.message });

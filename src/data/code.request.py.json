@@ -1,0 +1,42 @@
+[
+  {
+    "language": "python",
+    "code": "name = input()\nprint(f\"Hello, {name}!\")",
+    "input": "Amr"
+  },
+  {
+    "language": "python",
+    "code": "name = input()\nage = int(input())\nprint(f\"Hello, {name}!\")\nprint(f\"Next year you will be {age + 1}\")",
+    "input": "Amr\n21"
+  },
+  {
+    "language": "python",
+    "code": "n = int(input())\nprint(sum(range(1, n+1)))",
+    "input": "10"
+  },
+  {
+    "language": "python",
+    "code": "n = int(input())\nres = 1\nfor i in range(1, n+1):\n    res *= i\nprint(res)",
+    "input": "20"
+  },
+  {
+    "language": "python",
+    "code": "arr = list(map(int, input().split()))\narr.sort()\nprint(*arr)",
+    "input": "5 3 8 1 2"
+  },
+  {
+    "language": "python",
+    "code": "while True:\n    pass",
+    "input": ""
+  },
+  {
+    "language": "python",
+    "code": "a = [0] * (10**8)\nprint(len(a))",
+    "input": ""
+  },
+  {
+  "language": "python",
+  "code": "print(1/0)",
+  "input": ""
+}
+]

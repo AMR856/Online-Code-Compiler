@@ -1,0 +1,27 @@
+[
+  {
+    "language": "javascript",
+    "code": "const fs = require('fs');\nconst input = fs.readFileSync(0, 'utf-8').trim();\nconsole.log(`Hello, ${input}!`);",
+    "input": "Amr"
+  },
+  {
+    "language": "javascript",
+    "code": "const fs = require('fs');\nconst n = parseInt(fs.readFileSync(0, 'utf-8'));\nlet sum = 0;\nfor (let i = 1; i <= n; i++) sum += i;\nconsole.log(sum);",
+    "input": "10"
+  },
+  {
+    "language": "javascript",
+    "code": "const fs = require('fs');\nconst n = BigInt(fs.readFileSync(0, 'utf-8').trim());\nlet res = 1n;\nfor (let i = 1n; i <= n; i++) res *= i;\nconsole.log(res.toString());",
+    "input": "20"
+  },
+  {
+    "language": "javascript",
+    "code": "const fs = require('fs');\nconst arr = fs.readFileSync(0, 'utf-8').trim().split(' ').map(Number);\narr.sort((a,b)=>a-b);\nconsole.log(arr.join(' '));",
+    "input": "5 3 8 1 2"
+  },
+  {
+    "language": "javascript",
+    "code": "while(true){}",
+    "input": ""
+  }
+]

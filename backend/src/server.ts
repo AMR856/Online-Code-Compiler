@@ -1,8 +1,12 @@
-require('dotenv').config();
+require("dotenv").config();
 import app from "./app";
 import { connectRedis, disconnectRedis } from "./redis/client";
 import { connectRabbitMQ, closeRabbitMQ } from "./queue/rabbitmq";
 import { startWorker } from "./worker";
+import { initSocket } from "./socket/socket";
+import http from "http";
+import { initPubSub } from "./redis/pubsub";
+import { startSubscriber } from "./socket/subscriber";
 
 const PORT = process.env.PORT || 3000;
 const RUN_WORKER = process.env.RUN_WORKER === "false";
@@ -22,7 +26,13 @@ async function startServer() {
       await startWorker();
     }
 
-    const server = app.listen(PORT, () => {
+    const server = http.createServer(app);
+
+    initSocket(server);
+    await initPubSub();
+    await startSubscriber();
+
+    server.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
     });
 
@@ -60,7 +70,6 @@ async function startServer() {
       console.error("Unhandled Rejection:", reason);
       await shutdown("unhandledRejection");
     });
-
   } catch (err) {
     console.error("Failed to start server:", err);
     process.exit(1);

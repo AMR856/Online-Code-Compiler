@@ -25,7 +25,7 @@ export async function runDocker(options: DockerRunOptions): Promise<{
       code,
       runCommand,
       input,
-      timeout = 5000,
+      timeout = 20000,
     } = options;
 
     const jobId = uuidv4();

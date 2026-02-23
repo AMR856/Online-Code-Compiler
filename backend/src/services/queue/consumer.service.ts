@@ -9,7 +9,7 @@ export async function startConsumer() {
 
   await channel.assertQueue(QUEUE, { durable: true });
 
-  console.log("Waiting for jobs...");
+  console.log("Worker is waiting for jobs...");
 
   channel.consume(
     QUEUE,
@@ -25,7 +25,8 @@ export async function startConsumer() {
         channel.ack(msg);
       } catch (err) {
         console.error("Job failed:", job.id, err);
-        channel.nack(msg, false, false); 
+
+        channel.nack(msg, false, false);
       }
     },
     { noAck: false }

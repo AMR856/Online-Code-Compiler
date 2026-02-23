@@ -1,4 +1,6 @@
 import amqp, { Channel, ChannelModel } from "amqplib";
+import CustomError from "../types/customError";
+import { HttpStatusText } from "../types/HTTPStatusText";
 
 let channel: Channel | null = null;
 let connection: ChannelModel | null = null;
@@ -7,20 +9,19 @@ export async function connectRabbitMQ() {
   connection = await amqp.connect("amqp://localhost");
   channel = await connection.createChannel();
 
-  console.log("✅ RabbitMQ connected");
+  console.log("RabbitMQ connected");
 }
 
 export function getChannel(): Channel {
   if (!channel) {
-    throw new Error("RabbitMQ not connected");
+    throw new CustomError("RabbitMQ not connected", 500, HttpStatusText.ERROR);
   }
   return channel;
 }
 
-
 export async function closeRabbitMQ() {
   try {
-    console.log("🔌 Closing RabbitMQ...");
+    console.log(" Closing RabbitMQ...");
 
     if (channel) {
       await channel.close();

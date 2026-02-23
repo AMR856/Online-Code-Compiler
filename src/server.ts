@@ -1,10 +1,11 @@
+require('dotenv').config();
 import app from "./app";
 import { connectRedis, disconnectRedis } from "./redis/client";
 import { connectRabbitMQ, closeRabbitMQ } from "./queue/rabbitmq";
-import { bootstrap } from "./worker";
+import { startWorker } from "./worker";
 
 const PORT = process.env.PORT || 3000;
-const RUN_WORKER = process.env.RUN_WORKER === "true";
+const RUN_WORKER = process.env.RUN_WORKER === "false";
 
 let isShuttingDown = false;
 
@@ -12,15 +13,13 @@ async function startServer() {
   try {
     console.log("Connecting to Redis...");
     await connectRedis();
-    console.log("✅ Redis connected");
 
     console.log("Connecting to RabbitMQ...");
     await connectRabbitMQ();
-    console.log("✅ RabbitMQ connected");
 
     if (RUN_WORKER) {
       console.log("Starting worker...");
-      await bootstrap();
+      await startWorker();
     }
 
     const server = app.listen(PORT, () => {
@@ -31,7 +30,7 @@ async function startServer() {
       if (isShuttingDown) return;
       isShuttingDown = true;
 
-      console.log(`\n🛑 Received ${signal}. Shutting down gracefully...`);
+      console.log(`\nReceived ${signal}. Shutting down gracefully...`);
 
       server.close(async () => {
         try {

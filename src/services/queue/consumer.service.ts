@@ -25,7 +25,6 @@ export async function startConsumer() {
         channel.ack(msg);
       } catch (err) {
         console.error("Job failed:", job.id, err);
-
         channel.nack(msg, false, false); 
       }
     },

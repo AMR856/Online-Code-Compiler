@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
-import { redisClient } from "../redis/client";
-import { sendToQueue } from "../queue/producer";
 import { ExecuteRequest } from "../types/executeRequest";
 import CustomError from "../types/customError";
 import { HttpStatusText } from "../types/HTTPStatusText";
+import { enqueueJob } from "./queue/producer.service";
+import { RedisJobStorage } from "./storage/redis.storage";
 
 export class CodeService {
   static async createJob(request: ExecuteRequest) {
@@ -19,13 +19,9 @@ export class CodeService {
 
     const jobId = uuidv4();
 
-    await redisClient.hSet(jobId, {
-      status: "queued",
-      stdout: "",
-      stderr: "",
-    });
+    RedisJobStorage.create(jobId);
 
-    await sendToQueue({
+    await enqueueJob({
       id: jobId,
       code,
       language,
@@ -48,7 +44,7 @@ export class CodeService {
       throw new CustomError("Invalid Job ID", 400, HttpStatusText.FAIL);
     }
 
-    const result = await redisClient.hGetAll(jobId);
+    const result = await RedisJobStorage.get(jobId);
 
     if (!result || Object.keys(result).length === 0) {
       throw new CustomError("Job not found", 404, HttpStatusText.FAIL);

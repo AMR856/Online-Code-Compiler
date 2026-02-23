@@ -38,6 +38,7 @@ Includes **job queue processing**, **real-time job updates via WebSockets**, and
 src/
 ├─ app.ts                  # Express app setup
 ├─ server.ts               # Entry point for starting server
+├─ worker.ts               # Worker starter
 ├─ controllers/
 │  └─ code.controller.ts   # API controller
 ├─ services/
@@ -49,7 +50,6 @@ src/
 │     └─ js.service.ts     # JavaScript service
 ├─ queue/
 │  ├─ producer.ts          # Sends jobs to RabbitMQ
-│  ├─ worker.ts            # Worker starter
 │  ├─ consumer.service.ts  # Consumes jobs
 │  └─ rabbitmq.ts          # RabbitMQ connection
 ├─ redis/
@@ -237,7 +237,6 @@ switch (language.toLowerCase()) {
 * Full **unit testing** with Jest / Mocha
 * Rate limiting and resource monitoring
 * Frontend for interactive code execution
-* Persistent job storage (database)
 
 
 ## Security Considerations

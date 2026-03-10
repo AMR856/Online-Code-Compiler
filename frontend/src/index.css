@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    /* Light Navy Theme */
+    --background: 216 40% 96%; /* Very light navy/blue background */
+    --foreground: 216 24% 18%; /* Dark navy text */
+    --card: 216 50% 100%;
+    --card-foreground: 216 24% 18%;
+    --popover: 216 50% 98%;
+    --popover-foreground: 216 24% 18%;
+    --primary: 216 80% 45%; /* Navy accent */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 216 40% 92%; /* Soft blue secondary */
+    --secondary-foreground: 216 24% 18%;
+    --muted: 216 35% 94%;
+    --muted-foreground: 216 24% 32%;
+    --accent: 190 80% 55%;
+    --accent-foreground: 210 100% 98%;
+    --destructive: 0 80% 50%; /* Red for errors/warnings */
+    --destructive-foreground: 210 100% 98%;
+    --border: 216 30% 80%;
+    --input: 216 35% 92%;
+    --ring: 216 80% 60%;
+    --radius: 0.5rem;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

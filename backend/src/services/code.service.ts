@@ -4,18 +4,13 @@ import CustomError from "../types/customError";
 import { HttpStatusText } from "../types/HTTPStatusText";
 import { enqueueJob } from "./queue/producer.service";
 import { RedisJobStorage } from "./storage/redis.storage";
+import { sanitizeCode, sanitizeInput, validateLanguage } from "../utils/sanitize";
 
 export class CodeService {
   static async createJob(request: ExecuteRequest) {
-    const { code, language, input } = request;
-
-    if (!code || !language) {
-      throw new CustomError(
-        "Code and language are required",
-        400,
-        HttpStatusText.FAIL,
-      );
-    }
+    const code = sanitizeCode(request.code);
+    const language = validateLanguage(request.language);
+    const input = sanitizeInput(request.input);
 
     const jobId = uuidv4();
 

@@ -1,250 +1,212 @@
-# Online Compiler API
+# Online Code Compiler
 
-An **online code execution platform** built with **Node.js**, **TypeScript**, **Docker**, **RabbitMQ**, and **Redis**.
-Currently supports **Python** and **JavaScript** execution in safe sandboxes, with planned support for more languages.
-Includes **job queue processing**, **real-time job updates via WebSockets**, and a modular structure for adding more languages easily.
+Online code execution platform with a React frontend and a Node.js + TypeScript backend.
+The system queues jobs in RabbitMQ, stores status/output in Redis, and runs untrusted code inside isolated Docker containers.
 
----
+## What is included
 
-## Features
+- Frontend editor built with React + Vite + Monaco
+- Backend REST API built with Express + TypeScript
+- Async execution pipeline (API -> RabbitMQ -> worker -> Redis)
+- Status and output retrieval by job ID
+- Socket.IO + Redis pub/sub infrastructure for real-time updates
 
-* Execute code safely in **Docker containers** with resource limits
-* Supports **Python** and **JavaScript** (more languages coming soon)
-* Accepts **code, language, and input** as JSON
-* Returns **stdout**, **stderr**, and **job status**
-* **Asynchronous execution** using RabbitMQ queue
-* **Job status streaming** in real-time via WebSockets
-* **Modular services** for adding new programming languages
-* **Redis** used for storing job states
-* Planned: **Unit testing** for service and controller layers
+## Supported languages
 
----
+- JavaScript
+- Python
+- C
+- Bash
 
-## Technology Stack
+## Architecture overview
 
-* **Node.js** + **TypeScript**
-* **Express.js** for REST API
-* **Docker** for safe code execution
-* **RabbitMQ** for async job processing
-* **Redis** for job storage & pub/sub
-* **Socket.IO** for real-time updates
-* **uuid** for unique job IDs
+1. Client sends code to POST /code/execute.
+2. Backend validates and sanitizes input, creates a job ID, and stores queued status in Redis.
+3. Backend enqueues the job to RabbitMQ.
+4. Worker consumes the job and executes code in a Docker container with limits.
+5. Worker stores final output/status in Redis.
+6. Client polls GET /code/:jobId to read current status and output.
 
----
+Note: WebSocket updates are implemented in backend services, but the current frontend uses HTTP polling.
 
-## Project Structure
+## Tech stack
+
+- React, TypeScript, Vite, Monaco Editor
+- Node.js, Express, TypeScript
+- Docker
+- RabbitMQ
+- Redis
+- Socket.IO
+
+## Project layout
 
 ```text
-src/
-├─ app.ts                  # Express app setup
-├─ server.ts               # Entry point for starting server
-├─ worker.ts               # Worker starter
-├─ controllers/
-│  └─ code.controller.ts   # API controller
-├─ services/
-│  ├─ code.service.ts      # Dispatches execution to language services
-│  ├─ execution.service.ts # Handles worker execution logic
-│  └─ docker/
-│     ├─ docker.runner.ts  # Generic Docker runner
-│     ├─ py.service.ts     # Python service
-│     └─ js.service.ts     # JavaScript service
-├─ queue/
-│  ├─ producer.ts          # Sends jobs to RabbitMQ
-│  ├─ consumer.service.ts  # Consumes jobs
-│  └─ rabbitmq.ts          # RabbitMQ connection
-├─ redis/
-│  ├─ client.ts            # Redis connection
-│  └─ pubsub.ts            # Redis pub/sub for real-time updates
-├─ socket/
-│  ├─ socket.ts            # Socket.IO setup
-│  └─ subscriber.ts        # WebSocket subscriber for job updates
-├─ routes/
-│  └─ code.route.ts        # API routes
-├─ types/
-│  ├─ executeJob.ts
-│  ├─ executeRequest.ts
-│  ├─ executeResponse.ts
-│  ├─ executionResult.ts
-│  ├─ languages.ts
-│  └─ HTTPStatusText.ts
-└─ utils/
-   └─ errorHandler.ts
+.
+├── backend/
+│   ├── src/
+│   │   ├── app.ts
+│   │   ├── server.ts
+│   │   ├── worker.ts
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   │   ├── docker/runners/
+│   │   │   ├── queue/
+│   │   │   └── storage/
+│   │   ├── queue/
+│   │   ├── redis/
+│   │   ├── socket/
+│   │   ├── utils/
+│   │   └── workers/
+│   └── package.json
+├── frontend/
+│   ├── src/
+│   ├── index.html
+│   ├── vite.config.ts
+│   └── package.json
+└── README.md
 ```
 
----
+## Prerequisites
 
-## Setup
+- Node.js 18+
+- Docker running locally
+- RabbitMQ available at amqp://localhost
+- Redis available at redis://localhost:6379
 
-### Prerequisites
-
-* Node.js v20+
-* Docker installed and running
-* RabbitMQ installed and running
-* Redis installed and running
-* Yarn or npm
-
-### Install dependencies
+Optional quick start for Redis and RabbitMQ with Docker:
 
 ```bash
-npm install
-# or
-yarn install
+docker run -d --name occ-redis -p 6379:6379 redis:7
+docker run -d --name occ-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 ```
 
-### Environment Variables
+## Installation
 
-Create a `.env` file:
-
-```env
-PORT=3000
-RUN_WORKER=true
-REDIS_URL=redis://localhost:6379
-RABBITMQ_URL=amqp://localhost
-```
-
-### Run the server
+Install dependencies in each app:
 
 ```bash
+cd backend && npm install
+cd ../frontend && npm install
+```
+
+## Running locally
+
+Start backend:
+
+```bash
+cd backend
 npm run dev
-# or
-yarn dev
 ```
 
-Server runs at:
+Start frontend in another terminal:
 
+```bash
+cd frontend
+npm run dev
 ```
-http://localhost:3000
-```
 
-Worker runs automatically if `RUN_WORKER=true`.
+Default local URLs:
 
----
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3000
 
-## API Usage
+Vite is configured to proxy /code requests to the backend.
 
-### Execute Code
+## Backend configuration
 
-```
+Current backend values are hardcoded in source for Redis and RabbitMQ:
+
+- Redis: redis://localhost:6379
+- RabbitMQ: amqp://localhost
+
+Environment variable used by backend:
+
+- PORT (optional, defaults to 3000)
+- RUN_WORKER (see note below)
+
+Worker flag note:
+
+- Current implementation starts worker when RUN_WORKER is set to false.
+- If RUN_WORKER is undefined or true, jobs may remain queued.
+
+## API
+
+Base URL: http://localhost:3000
+
+### 1) Execute code
+
 POST /code/execute
-```
 
-#### Request Body
+Request body:
 
 ```json
 {
   "language": "python",
-  "code": "print('Hello world!')",
+  "code": "print('Hello from Python')",
   "input": ""
 }
 ```
 
-#### Response
+Response:
 
 ```json
 {
-  "jobId": "uuid-job-id",
+  "jobId": "8d4b6f63-cde2-4db2-a661-d4f58b4b7b65",
   "status": "queued"
 }
 ```
 
----
+### 2) Fetch result/status
 
-### Get Job Result
+GET /code/:jobId
 
-```
-GET /code/result/:jobId
-```
-
-#### Response
+Response example:
 
 ```json
 {
-  "jobId": "uuid-job-id",
+  "jobId": "8d4b6f63-cde2-4db2-a661-d4f58b4b7b65",
   "status": "done",
-  "stdout": "Hello world!\n",
+  "stdout": "Hello from Python\n",
   "stderr": ""
 }
 ```
 
----
+## Job statuses
 
-### Real-Time Job Updates (WebSocket)
+- queued
+- running
+- done
+- error
 
-* Connect to the WebSocket server (`ws://localhost:3000`)
-* Join a job room:
+## Limits and safety
 
-```ts
-socket.emit("joinJob", "uuid-job-id");
-```
+- Language whitelist: python, javascript, c, bash
+- Input sanitization:
+  - code max length: 100000
+  - stdin max length: 20000
+  - null bytes removed
+- API rate limiting:
+  - POST /code/execute: 10 requests/minute
+  - GET /code/:jobId: 100 requests/15 minutes
+- Docker execution limits:
+  - --network none
+  - --memory 100m
+  - --cpus 0.5
+  - timeout around 20 seconds
+  - temp job directory is removed after execution
 
-* Listen for job updates:
+## WebSocket events (available in backend)
 
-```ts
-socket.on("jobUpdate", (data) => {
-  console.log(data);
-});
-```
+Socket server is attached to backend HTTP server.
 
-#### Example WebSocket Update
+- Client event: joinJob with payload jobId
+- Server event: jobUpdate with payload containing status/output
 
-```json
-{
-  "jobId": "uuid-job-id",
-  "status": "running"
-}
-```
+## Extending to a new language
 
-```json
-{
-  "jobId": "uuid-job-id",
-  "status": "done",
-  "stdout": "Hello world!\n",
-  "stderr": ""
-}
-```
-
----
-
-## Adding New Languages
-
-1. Create a **Docker service** in `src/services/docker/`:
-
-```
-ts.service.ts       # TypeScript
-cpp.service.ts      # C++
-ruby.service.ts     # Ruby
-```
-
-2. Add it to `CodeService` dispatcher:
-
-```ts
-switch (language.toLowerCase()) {
-  case Languages.PYTHON:
-    return runPythonDocker(code, input);
-  case Languages.JAVASCRIPT:
-    return runJavaScriptDocker(code, input);
-  // Add new languages here
-}
-```
-
-3. Add the language to your `Languages` enum (`src/types/languages.ts`).
-
----
-
-## Future Improvements
-
-* Add more languages (C++, TypeScript, Ruby, etc.)
-* Full **unit testing** with Jest / Mocha
-* Rate limiting and resource monitoring
-* Frontend for interactive code execution
-
-
-## Security Considerations
-
-* All code executes in **isolated Docker containers** with:
-
-  * Disabled network
-  * Memory & CPU limits
-  * Automatic cleanup of temporary files
-* **Only whitelisted languages** are allowed
-* Jobs are **queued** and **executed asynchronously** for safety
+1. Add a new runner in backend/src/services/docker/runners.
+2. Register it in backend/src/services/docker/index.ts.
+3. Add language value in backend/src/types/languages.ts.
+4. Update language validation in backend/src/utils/sanitize.ts.
+5. Add option in frontend/src/components/SelectProgram.tsx.

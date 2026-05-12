@@ -28,14 +28,17 @@ export async function runDocker(options: DockerRunOptions): Promise<{
       timeout = 20000,
     } = options;
 
+    // Creating a unique temporary directory for this job to avoid conflicts between concurrent executions. The directory will be automatically cleaned up after execution.
     const jobId = uuidv4();
     const tempDir = path.join(__dirname, "../../../temp_jobs", jobId);
 
     fs.mkdirSync(tempDir, { recursive: true });
 
+    // Making the file and writing the code content in it
     const codeFilePath = path.join(tempDir, fileName);
     fs.writeFileSync(codeFilePath, code);
 
+    // The file will be mounted inside the Docker container at /app, so we construct the command to run the code using that path.
     const containerFilePath = `/app/${fileName}`;
 
     const dockerCmd = `

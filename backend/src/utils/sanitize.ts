@@ -41,7 +41,7 @@ export function sanitizeInput(input: unknown): string | undefined {
 }
 
 export function validateLanguage(language: unknown): string {
-  const allowed = ["python", "javascript"];
+  const allowed = ["python", "javascript", "c", "bash"];
   const lang = ensureString(language, "language").toLowerCase().trim();
 
   if (!allowed.includes(lang)) {

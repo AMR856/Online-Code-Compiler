@@ -11,14 +11,14 @@ export const CenteredButton: FC<CenteredButtonInterface> = ({
   disabled,
 }) => {
   return (
-    <div className="flex items-center justify-center max-h-screen white">
+    <div className="flex items-center justify-start">
       <Button
         onClick={onProgram}
         variant="default"
-        className="px-4 py-2 text-sm"
+        className="border border-[#555] bg-[#333] px-5 py-2 text-sm text-[#d4d4d4] shadow-none transition-colors hover:border-[#007acc] hover:bg-[#007acc]"
         disabled={disabled}
       >
-        Run
+        Run ▶
       </Button>
     </div>
   );

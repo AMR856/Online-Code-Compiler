@@ -3,12 +3,15 @@ import { Header } from "./components/Header";
 import { StatusBar } from "./components/StatusBar";
 import { CenteredButton } from "./components/CenteredButton";
 import { SelectProgram } from "./components/SelectProgram";
-import { InputField } from "./components/InputField";
+import { MonacoEditor } from "./components/MonacoEditor";
+import { Terminal } from "./components/Terminal";
 import axios from "axios";
 
 const DEFAULT_CODE: Record<string, string> = {
   javascript: "console.log(\"Hello from JavaScript\");",
   python: "print(\"Hello from Python\")",
+  c: "#include <stdio.h>\n\nint main(void) {\n    printf(\"Hello from C\\n\");\n    return 0;\n}",
+  bash: "#!/usr/bin/env bash\necho \"Hello from Bash\"",
 };
 
 function App() {
@@ -102,73 +105,65 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,122,204,0.14),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(97,218,251,0.08),transparent_28%)]" />
       <Header />
-      <div className="flex flex-col gap-4 px-6 py-4 md:flex-row">
-        <div className="flex-1 space-y-4">
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-foreground/80">Language</span>
-            <SelectProgram
-              selectedProgram={language}
-              onProgramChange={handleLanguageChange}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <span className="text-sm font-semibold text-foreground/80">Code</span>
-            <textarea
-              value={code}
-              onChange={(e) => handleCodeChange(e.target.value)}
-              className="h-60 w-full resize-none rounded-md border border-border bg-card px-4 py-3 text-sm text-foreground shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          <InputField
-            label="Stdin (optional)"
-            placeholder="Input to pass to your program"
-            onChange={handleStdinChange}
-          />
-
-          <CenteredButton
-            onProgram={handleRun}
-            disabled={status === "Submitting..." || status === "Queued"}
-          />
-        </div>
-
-        <div className="flex-1 space-y-4">
-          <div className="rounded-md border border-border bg-card p-4 shadow-sm">
-            <h2 className="text-sm font-semibold text-foreground">Output</h2>
-            <div className="mt-2 space-y-2">
-              <div>
-                <div className="text-xs font-medium text-foreground/70">Stdout</div>
-                <pre className="max-h-48 overflow-auto rounded-md bg-background/60 p-2 text-sm text-foreground">
-                  {stdout || (
-                    <span className="text-foreground/60">No output yet</span>
-                  )}
-                </pre>
-              </div>
-              <div>
-                <div className="text-xs font-medium text-foreground/70">Stderr</div>
-                <pre className="max-h-48 overflow-auto rounded-md bg-background/60 p-2 text-sm text-foreground">
-                  {stderr || (
-                    <span className="text-foreground/60">No errors</span>
-                  )}
-                </pre>
-              </div>
+      <main className="relative z-10 grid flex-1 gap-4 overflow-hidden px-4 py-4 pb-16 md:grid-cols-[1.25fr_0.95fr] md:px-6">
+        <section className="flex min-h-0 flex-col gap-4 overflow-hidden rounded-md border border-[#333] bg-[#1e1e1e]/95 p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.24)] backdrop-blur-sm">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-1">
+              <span className="text-xs uppercase tracking-[0.2em] text-[#9da3ad]">Editor</span>
+              <h2 className="text-lg font-semibold text-[#d4d4d4]">Write, run, and inspect code</h2>
             </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-xs uppercase tracking-[0.18em] text-[#9da3ad]">Language</span>
+              <SelectProgram
+                selectedProgram={language}
+                onProgramChange={handleLanguageChange}
+              />
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1">
+            <MonacoEditor language={language} value={code} onChange={handleCodeChange} />
+          </div>
+
+          <div className="flex items-center justify-between gap-4 rounded border border-[#333] bg-[#252526] px-3 py-3">
+            <div className="text-xs text-[#9da3ad]">
+              <span className="font-semibold text-[#d4d4d4]">Status:</span> {status}
+            </div>
+            <CenteredButton
+              onProgram={handleRun}
+              disabled={status === "Submitting..." || status === "Queued"}
+            />
+          </div>
+        </section>
+
+        <section className="flex min-h-0 flex-col overflow-hidden rounded-md border border-[#333] bg-[#1e1e1e]/95 shadow-[0_0_0_1px_rgba(0,0,0,0.24)] backdrop-blur-sm">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <Terminal
+              stdout={stdout}
+              stderr={stderr}
+              stdin={stdin}
+              onStdinChange={handleStdinChange}
+              onClear={() => {
+                setStdout("");
+                setStderr("");
+              }}
+            />
           </div>
 
           {jobId && (
-            <div className="rounded-md border border-border bg-card p-4 text-sm text-foreground">
-              <div className="font-medium">Job</div>
-              <div className="mt-1 flex items-center justify-between">
-                <span className="text-foreground/80">ID:</span>
-                <span className="font-mono text-xs text-foreground/70">{jobId}</span>
+            <div className="border-t border-[#333] bg-[#252526] p-4 text-sm text-[#d4d4d4]">
+              <div className="font-medium text-[#61dafb]">Job</div>
+              <div className="mt-1 flex items-center justify-between gap-3">
+                <span className="text-[#9da3ad]">ID:</span>
+                <span className="max-w-full truncate font-mono text-xs text-[#d4d4d4]">{jobId}</span>
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
 
       <StatusBar status={status} />
     </div>
